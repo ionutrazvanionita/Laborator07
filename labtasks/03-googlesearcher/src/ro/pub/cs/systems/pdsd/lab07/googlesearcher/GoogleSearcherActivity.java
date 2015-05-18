@@ -1,13 +1,25 @@
 package ro.pub.cs.systems.pdsd.lab07.googlesearcher;
 
+import java.io.IOException;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class GoogleSearcherActivity extends Activity {
 	
@@ -27,16 +39,26 @@ public class GoogleSearcherActivity extends Activity {
 			
 			// TODO: exercise 6b)
 			// create an instance of a HttpClient object
+			HttpClient httpClient = new DefaultHttpClient();
 			// create an instance of a HttpGet object, encapsulating the base Internet address (http://www.google.com) and the keyword
+			HttpGet httpGet = new HttpGet("http://www.google.com/" + keyword);
 			// create an instance of a ResponseHandler object
+			ResponseHandler<String> responseHandler = new BasicResponseHandler();
 			// execute the request, thus generating the result
+			String content=null;
+			try {
+				content = httpClient.execute(httpGet, responseHandler);
+			} catch (Exception e) {
+				Log.e("GoogleSearcher", "failed to execute get");
+				e.printStackTrace();
+			}
 			// display the result into the googleResultsWebView through loadDataWithBaseURL() method
 			// - base Internet address is http://www.google.com
 			// - page source code is the response
 			// - mimetype is text/html
 			// - encoding is UTF-8
 			// - history is null
-
+			googleResultsWebView.loadDataWithBaseURL("http://www.google.com", content, "text/html", "UTF-8", null);
 		}
 	}
 	
@@ -45,14 +67,21 @@ public class GoogleSearcherActivity extends Activity {
 		
 		@Override
 		public void onClick(View view) {
-			
+			String keyword;
+			Context context = getApplicationContext();
 			// TODO: exercise 6a)
 			// obtain the keyword from keywordEditText
+			keyword = keywordEditText.getText().toString();
 			// signal an empty keyword through an error message displayed in a Toast window
+			Toast toast = Toast.makeText(context, "no keyowrd", Toast.LENGTH_SHORT);
+			if (keyword == null || keyword.compareTo("") == 0)
+				toast.show();
 			// split a multiple word (separated by space) keyword and link them through +
+			keyword = keyword.replaceAll(" ", "+");
 			// prepend the keyword with "search?q=" string
+			keyword = "search?q=" + keyword;
 			// start the GoogleSearcherThread passing the keyword
-
+			new GoogleSearcherThread(keyword).start();
 		}
 	}
 
